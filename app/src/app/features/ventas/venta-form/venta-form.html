@@ -1,0 +1,210 @@
+<section class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0">{{ esEdicion() ? 'Editar venta' : 'Nueva venta' }}</h1>
+  <a class="btn btn-outline-secondary" routerLink="/ventas" data-testid="btn-volver">Volver</a>
+</section>
+
+@if (cargando()) {
+  <p data-testid="cargando-venta">Cargando…</p>
+} @else {
+  <form [formGroup]="form" (ngSubmit)="guardar()" novalidate data-testid="form-venta">
+    @if (error()) {
+      <div class="alert alert-danger" role="alert" data-testid="error-form">{{ error() }}</div>
+    }
+
+    <div class="card card-body mb-3">
+      <div class="row g-3">
+        <div class="col-12 col-md-4">
+          <label class="form-label" for="fecha">Fecha</label>
+          <input
+            id="fecha"
+            type="date"
+            class="form-control"
+            formControlName="fecha"
+            [class.is-invalid]="campoInvalido('fecha')"
+            data-testid="campo-fecha"
+          />
+          @if (campoInvalido('fecha')) {
+            <div class="invalid-feedback d-block">Ingresá la fecha.</div>
+          }
+        </div>
+
+        <div class="col-12 col-md-4">
+          <label class="form-label" for="cliente">Cliente</label>
+          <input
+            id="cliente"
+            type="text"
+            class="form-control"
+            formControlName="cliente"
+            [class.is-invalid]="campoInvalido('cliente')"
+            data-testid="campo-cliente"
+          />
+          @if (campoInvalido('cliente')) {
+            <div class="invalid-feedback d-block" data-testid="error-cliente">
+              Ingresá el cliente.
+            </div>
+          }
+        </div>
+
+        <div class="col-6 col-md-2">
+          <label class="form-label" for="medio-pago">Medio de pago</label>
+          <select
+            id="medio-pago"
+            class="form-select"
+            formControlName="medio_pago"
+            data-testid="campo-medio-pago"
+          >
+            @for (medio of mediosPago; track medio) {
+              <option [value]="medio">{{ medio }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="col-6 col-md-2">
+          <label class="form-label" for="moneda">Moneda</label>
+          <select
+            id="moneda"
+            class="form-select"
+            formControlName="moneda"
+            data-testid="campo-moneda"
+          >
+            @for (moneda of monedas; track moneda) {
+              <option [value]="moneda">{{ moneda }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label" for="descripcion">Descripción (opcional)</label>
+          <textarea
+            id="descripcion"
+            class="form-control"
+            rows="2"
+            formControlName="descripcion"
+            data-testid="campo-descripcion"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-body mb-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h5 mb-0">Productos</h2>
+        <button
+          type="button"
+          class="btn btn-outline-primary btn-sm"
+          data-testid="btn-agregar-linea"
+          (click)="agregarLinea()"
+        >
+          Agregar línea
+        </button>
+      </div>
+
+      @if (lineas.hasError('minlength') && lineas.touched) {
+        <div class="alert alert-danger py-2">
+          La venta debe tener al menos una línea de producto.
+        </div>
+      }
+
+      <div formArrayName="items">
+        @for (linea of lineas.controls; track linea; let i = $index) {
+          <div class="row g-2 align-items-start border-top pt-2 mt-2" [formGroupName]="i">
+            <div class="col-12 col-md-5">
+              <label class="form-label" [for]="'producto-' + i">Producto</label>
+              <input
+                [id]="'producto-' + i"
+                type="text"
+                class="form-control"
+                formControlName="producto"
+                [class.is-invalid]="linea.controls.producto.touched && linea.controls.producto.invalid"
+                data-testid="linea-producto"
+              />
+              @if (linea.controls.producto.touched && linea.controls.producto.invalid) {
+                <div class="invalid-feedback d-block">Ingresá el nombre del producto.</div>
+              }
+            </div>
+
+            <div class="col-4 col-md-2">
+              <label class="form-label" [for]="'cantidad-' + i">Cantidad</label>
+              <input
+                [id]="'cantidad-' + i"
+                type="number"
+                min="0"
+                step="any"
+                class="form-control"
+                formControlName="cantidad"
+                [class.is-invalid]="linea.controls.cantidad.touched && linea.controls.cantidad.invalid"
+                data-testid="linea-cantidad"
+              />
+              @if (linea.controls.cantidad.touched && linea.controls.cantidad.invalid) {
+                <div class="invalid-feedback d-block" data-testid="error-cantidad">
+                  La cantidad debe ser mayor a 0.
+                </div>
+              }
+            </div>
+
+            <div class="col-4 col-md-2">
+              <label class="form-label" [for]="'precio-' + i">Precio unitario</label>
+              <input
+                [id]="'precio-' + i"
+                type="number"
+                min="0"
+                step="any"
+                class="form-control"
+                formControlName="precioUnitario"
+                [class.is-invalid]="
+                  linea.controls.precioUnitario.touched && linea.controls.precioUnitario.invalid
+                "
+                data-testid="linea-precio"
+              />
+              @if (
+                linea.controls.precioUnitario.touched && linea.controls.precioUnitario.invalid
+              ) {
+                <div class="invalid-feedback d-block" data-testid="error-precio">
+                  El precio no puede ser negativo.
+                </div>
+              }
+            </div>
+
+            <div class="col-4 col-md-2">
+              <label class="form-label">Subtotal</label>
+              <div class="form-control-plaintext text-end" data-testid="linea-subtotal">
+                {{ formatoMonto(subtotal(i)) }}
+              </div>
+            </div>
+
+            <div class="col-12 col-md-1 d-flex align-items-end justify-content-end">
+              <button
+                type="button"
+                class="btn btn-outline-danger btn-sm"
+                data-testid="btn-quitar-linea"
+                [disabled]="lineas.length <= 1"
+                (click)="quitarLinea(i)"
+              >
+                Quitar
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="d-flex justify-content-end align-items-center gap-2 mt-3">
+        <span class="text-muted">Total:</span>
+        <span class="fs-4 fw-semibold" data-testid="total-venta">
+          {{ formatoMonto(total()) }} {{ valores().moneda }}
+        </span>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+      <a class="btn btn-outline-secondary" routerLink="/ventas">Cancelar</a>
+      <button
+        type="submit"
+        class="btn btn-primary"
+        data-testid="btn-guardar"
+        [disabled]="guardando()"
+      >
+        {{ guardando() ? 'Guardando…' : 'Guardar' }}
+      </button>
+    </div>
+  </form>
+}

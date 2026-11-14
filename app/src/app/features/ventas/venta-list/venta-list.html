@@ -1,0 +1,214 @@
+<section class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0">Ventas</h1>
+  <a class="btn btn-primary" routerLink="/ventas/nueva" data-testid="btn-nueva-venta">
+    Nueva venta
+  </a>
+</section>
+
+<form class="card card-body mb-3" [formGroup]="formFiltros" data-testid="form-filtros">
+  <div class="row g-2 align-items-end">
+    <div class="col-6 col-md-3">
+      <label class="form-label" for="filtro-desde">Desde</label>
+      <input
+        id="filtro-desde"
+        type="date"
+        class="form-control"
+        formControlName="fechaDesde"
+        data-testid="filtro-desde"
+      />
+    </div>
+
+    <div class="col-6 col-md-3">
+      <label class="form-label" for="filtro-hasta">Hasta</label>
+      <input
+        id="filtro-hasta"
+        type="date"
+        class="form-control"
+        formControlName="fechaHasta"
+        data-testid="filtro-hasta"
+      />
+    </div>
+
+    <div class="col-12 col-md-3">
+      <label class="form-label" for="filtro-cliente">Cliente</label>
+      <input
+        id="filtro-cliente"
+        type="search"
+        class="form-control"
+        formControlName="cliente"
+        placeholder="Nombre o parte del nombre"
+        data-testid="filtro-cliente"
+      />
+    </div>
+
+    <div class="col-6 col-md-2">
+      <label class="form-label" for="filtro-medio-pago">Medio de pago</label>
+      <select
+        id="filtro-medio-pago"
+        class="form-select"
+        formControlName="medioPago"
+        data-testid="filtro-medio-pago"
+      >
+        <option value="">Todos</option>
+        @for (medio of mediosPago; track medio) {
+          <option [value]="medio">{{ medio }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="col-6 col-md-2">
+      <label class="form-label" for="filtro-moneda">Moneda</label>
+      <select
+        id="filtro-moneda"
+        class="form-select"
+        formControlName="moneda"
+        data-testid="filtro-moneda"
+      >
+        <option value="">Todas</option>
+        @for (moneda of monedas; track moneda) {
+          <option [value]="moneda">{{ moneda }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="col-12 col-md-auto">
+      <button
+        type="button"
+        class="btn btn-outline-secondary w-100"
+        data-testid="btn-limpiar-filtros"
+        (click)="limpiarFiltros()"
+      >
+        Limpiar
+      </button>
+    </div>
+  </div>
+</form>
+
+<app-resumen-ventas [filtros]="filtros()" [refresco]="refresco()" />
+
+@if (error()) {
+  <div class="alert alert-danger" role="alert">{{ error() }}</div>
+}
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-striped mb-0" data-testid="tabla-ventas">
+      <thead>
+        <tr>
+          <th scope="col">Fecha</th>
+          <th scope="col">Cliente</th>
+          <th scope="col">Medio de pago</th>
+          <th scope="col">Moneda</th>
+          <th scope="col" class="text-end">Total</th>
+          <th scope="col" class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (cargando()) {
+          <tr>
+            <td colspan="6" class="text-center py-4" data-testid="cargando">Cargando…</td>
+          </tr>
+        } @else if (ventas().length === 0) {
+          <tr>
+            <td colspan="6" class="text-center py-4" data-testid="sin-ventas">
+              No hay ventas para los filtros elegidos.
+            </td>
+          </tr>
+        } @else {
+          @for (venta of ventas(); track venta.id) {
+            <tr data-testid="fila-venta">
+              <td>{{ formatoFecha(venta.fecha) }}</td>
+              <td>{{ venta.cliente }}</td>
+              <td>{{ venta.medio_pago }}</td>
+              <td>{{ venta.moneda }}</td>
+              <td class="text-end">{{ formatoMonto(venta.total) }}</td>
+              <td class="text-end text-nowrap">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-secondary"
+                  data-testid="btn-ver"
+                  (click)="verDetalle(venta)"
+                >
+                  Ver
+                </button>
+                <a
+                  class="btn btn-sm btn-outline-primary"
+                  data-testid="btn-editar"
+                  [routerLink]="['/ventas', venta.id, 'editar']"
+                >
+                  Editar
+                </a>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-danger"
+                  data-testid="btn-eliminar"
+                  (click)="pedirEliminar(venta)"
+                >
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div
+    class="card-footer d-flex flex-wrap justify-content-between align-items-center gap-2"
+    data-testid="paginacion"
+  >
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <label class="form-label mb-0" for="tamano-pagina">Por página</label>
+      <select
+        id="tamano-pagina"
+        class="form-select form-select-sm w-auto"
+        [value]="tamanoPagina()"
+        data-testid="tamano-pagina"
+        (change)="alCambiarTamano($event)"
+      >
+        @for (tamano of tamanosPagina; track tamano) {
+          <option [value]="tamano">{{ tamano }}</option>
+        }
+      </select>
+      <span class="text-muted small" data-testid="total-ventas">{{ total() }} ventas</span>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        data-testid="btn-anterior"
+        [disabled]="pagina() === 1"
+        (click)="cambiarPagina(pagina() - 1)"
+      >
+        Anterior
+      </button>
+      <span class="small" data-testid="pagina-actual">
+        Página {{ pagina() }} de {{ totalPaginas() }}
+      </span>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        data-testid="btn-siguiente"
+        [disabled]="pagina() >= totalPaginas()"
+        (click)="cambiarPagina(pagina() + 1)"
+      >
+        Siguiente
+      </button>
+    </div>
+  </div>
+</div>
+
+<app-venta-detail-modal
+  [venta]="ventaDetalle()"
+  (cerrar)="ventaDetalle.set(null)"
+  (editar)="editarDesdeDetalle($event)"
+/>
+
+@if (ventaAEliminar()) {
+  <app-confirm-dialog
+    (confirmar)="confirmarEliminar()"
+    (cancelar)="ventaAEliminar.set(null)"
+  />
+}

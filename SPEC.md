@@ -67,6 +67,16 @@ de producto dentro del mismo documento.
 - **Idioma y formato:** interfaz en español, fechas en formato dd/mm/aaaa y montos con dos decimales y configuración regional es-AR, con coma decimal (por ejemplo, 4.501,50).
 - **Navegadores:** versiones recientes de Chrome, Firefox, Edge y Safari.
 
+## Despliegue
+
+- **Hosting:** Vercel, con la app Angular en `app/` como raíz del proyecto.
+- **Build:** `npm run build:vercel`; la salida publicada es `dist/app/browser`.
+- **Node:** 24.x.
+- **Variables de entorno:** `SUPABASE_URL` y `SUPABASE_KEY` se configuran en Vercel. `scripts/generar-environment.mjs` genera `src/environments/environment.ts` durante el build; ese archivo está en `.gitignore` y nunca se versiona.
+- **Rutas:** un rewrite de SPA hacia `/index.html` permite recargar rutas profundas como `/ventas/nueva` o `/ventas/:id/editar`.
+- **Métodos de deploy:** manual con Vercel CLI y automático desde un repositorio de GitHub.
+- **Seguridad:** al build solo se pasa la clave publishable (`sb_publishable_...`); nunca `service_role` ni la clave secret. La publishable queda en el bundle porque es pública por diseño.
+
 ## Criterios de aceptación
 | Requisito | Se considera cumplido cuando |
 |---|---|
@@ -81,10 +91,11 @@ de producto dentro del mismo documento.
 | RF-10 | Al eliminar y confirmar, la venta desaparece del listado y del resumen. Si se cancela, no cambia nada. |
 | RF-11 | Con ventas en ARS y en USD dentro del período, el resumen muestra un total para cada moneda y ninguno combinado. |
 | General | La aplicación funciona en pantalla de celular (360 px de ancho) sin desplazamiento horizontal y los datos persisten al cerrar y volver a abrir el navegador. |
+| Deploy | La app publicada en Vercel abre el listado, una ruta profunda como /ventas/nueva responde al recargar, y el build toma las credenciales de variables de entorno sin secretos en el repositorio. |
 
 ## Puntos abiertos y riesgos
 - **Medios de pago:** efectivo, transferencia, tarjeta de débito, tarjeta de crédito.
 - **Datos expuestos:** con reglas abiertas, los datos son accesibles para cualquiera que tenga la URL.
-- **Hosting:** Vercel.
+- **Hosting:** Vercel (ver “Despliegue”).
 - **Exportación:** exportar a CSV o Excel queda fuera de esta versión.
 - **Cantidad de ventas:** el listado con paginación.
